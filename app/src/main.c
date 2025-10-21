@@ -2,45 +2,43 @@
  * main.c
  */
 
-#include <stdio.h>
 #include <zephyr/kernel.h>
+#include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/sys/printk.h>
+#include <inttypes.h>
 
-/* 1000 msec = 1 sec */
-#define SLEEP_TIME_MS   1000
+#define SW0_NODE    DT_ALIAS(sw0)
+static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(SW0_NODE, gpios);
 
-/* The devicetree node identifier for the "led0" alias. */
-#define LED0_NODE DT_ALIAS(led0)
+static struct gpio_callback button_isr_data;
 
-/*
- * A build error on this line means your board is unsupported.
- * See the sample documentation for information on how to fix this.
- */
-static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
+void button_isr(const struct device *dev, struct gpio_callback *cb, uint32_t pins) {
+    printk("Button 0 pressed!\n");
+}
 
-int main(void)
-{
+int main(void) {
     int ret;
-    bool led_state = true;
 
-    if (!gpio_is_ready_dt(&led)) {
+    if (!gpio_is_ready_dt(&button)) {
         return 0;
     }
 
-    ret = gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
-    if (ret < 0) {
+    ret = gpio_pin_configure_dt(&button, GPIO_INPUT);
+    if (0 > ret) {
         return 0;
     }
+
+    ret = gpio_pin_interrupt_configure_dt(&button, GPIO_INT_EDGE_TO_ACTIVE);
+    if (0 > ret) {
+        return 0;
+    }
+
+    gpio_init_callback(&button_isr_data, button_isr, BIT(button.pin));
+    gpio_add_callback(button.port, &button_isr_data);
 
     while (1) {
-        ret = gpio_pin_toggle_dt(&led);
-        if (ret < 0) {
-            return 0;
-        }
-
-        led_state = !led_state;
-        printf("LED state: %s\n", led_state ? "ON" : "OFF");
-        k_msleep(SLEEP_TIME_MS);
     }
+
     return 0;
 }
