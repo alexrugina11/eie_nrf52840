@@ -17,12 +17,31 @@ int main(void) {
         return 0;
     }
 
+    int counter = 0;          // internal 4-bit counter
+    int prev_state[4] = {0};  // track LED states (0 = off, 1 = on)
+
     while (1) {
         if (BTN_check_clear_pressed(BTN0)) {
-            LED_toggle(LED0);
-            printk("Button 0 pressed!\n");
+
+            // increment counter and wrap around at 16 (4-bit)
+            counter = (counter + 1) % 16;
+
+            // update LEDs to match counter bits
+            for (int i = 0; i < 4; i++) {
+                int bit = (counter >> i) & 1;
+
+                // if the LED's desired state differs from its previous one, toggle it
+                if (bit != prev_state[i]) {
+                    LED_toggle(i);
+                    prev_state[i] = bit;
+                }
+            }
+
+            printk("Counter = %d\n", counter);
         }
+
         k_msleep(SLEEP_MS);
     }
+
     return 0;
 }
