@@ -6,13 +6,10 @@
 #include <zephyr/sys/printk.h>
 #include <inttypes.h>
 
-<<<<<<< HEAD
-=======
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 
 #include "BTN.h"
->>>>>>> 04b671780342e4c799ea3c565aaf47354aee2dda
 #include "LED.h"
 #include "BTN.h"
 
